@@ -19,7 +19,7 @@ public class Server
         this.socket.Bind(endp);
         this.socket.Listen(10);
     }
-    public void ClientAccept() => this.Client = this.socket.Accept();
+    public async Task<Socket> ClientAccept() => this.Client = await this.socket.AcceptAsync();
 
     public void Stop()
     {
@@ -33,10 +33,10 @@ public class Server
             Debug.WriteLine(ex.Message);
         }
     }
-    public int Receive() => this.Client.Receive(this.Buffer);
-    public void Send(string strSend)
+    public async Task<int> Receive() => await this.Client.ReceiveAsync(this.Buffer);
+    public async void Send(string strSend)
     {
         if (this.socket != null)
-            this.Client.Send(System.Text.Encoding.UTF8.GetBytes(strSend));
+            await this.Client.SendAsync(System.Text.Encoding.UTF8.GetBytes(strSend));
     }
 }
