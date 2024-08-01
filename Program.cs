@@ -13,37 +13,58 @@ internal class Program
             $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
             $"SYSTEM: Server was setted up. Waiting for client...");
 
-        string sendStr = "Hello client!";
+        string sendStr;
         int bytesRead;
         while (true)
         {
             try
             {
-                server.ClientAccept();
+                if (!server.Client.Connected)
+                {
+                    server.ClientAccept();
+                    Console.WriteLine(
+                            $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
+                            $"SYSTEM: " +
+                            $"{server.Client.RemoteEndPoint} connected!");
 
-                Console.WriteLine(
-                        $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
-                        $"SYSTEM: " +
-                        $"{server.Client.RemoteEndPoint} connected!");
+                    bytesRead = server.Receive();
+                    Console.WriteLine(
+                            $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
+                            $"{server.Client.RemoteEndPoint}: " +
+                            $"{System.Text.Encoding.UTF8.GetString(server.Buffer, 0, bytesRead)}");
 
-                bytesRead = server.Receive();
-                Console.WriteLine(
-                    $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
-                    $"{server.Client.RemoteEndPoint}: " +
-                    $"{System.Text.Encoding.UTF8.GetString(server.Buffer, 0, bytesRead)}");
-
-                server.Send(sendStr);
-                Console.WriteLine(
-                    $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
-                    $"me: " +
-                    $"{sendStr}");
+                    if (System.Text.Encoding.UTF8.GetString(server.Buffer, 0, bytesRead).ToLower() == "getdate")
+                    {
+                        sendStr = DateTime.Now.ToString("dd/MM/yyyy");
+                        server.Send(sendStr);
+                        Console.WriteLine(
+                            $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
+                            $"me: " +
+                            $"{sendStr}");
+                    }
+                    else if (System.Text.Encoding.UTF8.GetString(server.Buffer, 0, bytesRead).ToLower() == "gettime")
+                    {
+                        sendStr = DateTime.Now.ToString("HH:mm:ss");
+                        server.Send(sendStr);
+                        Console.WriteLine(
+                            $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
+                            $"me: " +
+                            $"{sendStr}");
+                    }
+                    else
+                    {
+                        sendStr = "Unrecognized command!";
+                        server.Send(sendStr);
+                        Console.WriteLine(
+                            $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
+                            $"me: " +
+                            $"{sendStr}");
+                    }
+                }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-            }
-            finally
-            {
                 Console.WriteLine(
                         $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}] " +
                         $"SYSTEM: " +
